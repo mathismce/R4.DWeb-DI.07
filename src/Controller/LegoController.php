@@ -13,6 +13,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\HttpFoundation\Response;
 use stdClass;
 use App\Entity\Lego;
+use App\Entity\Collection;
 use App\Service\CreditsGenerator;
 use App\Service\DatabaseInterface;
 
@@ -24,32 +25,6 @@ class LegoController extends AbstractController
     // L’attribute #[Route] indique ici que l'on associe la route
     // "/" à la méthode home pour que Symfony l'exécute chaque fois
     // que l'on accède à la racine de notre site.
-    private array $legos;
- 
-
-    public function __construct()
-    {
-        $this->legos = [];
-        $data = file_get_contents("../src/data.json");
-        $tab = json_decode($data);
-
-
-        foreach ($tab as $legoData) {
-
-            $legoModel = new Lego($legoData->id, $legoData->name, $legoData->collection);
-            $legoModel->setDescription($legoData->description);
-            $legoModel->setCollection($legoData->collection);
-            $legoModel->setPrice($legoData->price);
-            $legoModel->setPieces($legoData->pieces);
-            $legoModel->setBoxImage($legoData->images->box);
-            $legoModel->setlegoImage($legoData->images->bg);
-
-            array_push($this->legos, $legoModel);
-        }
-
-        return $this->legos;
-    }
-
 
     #[Route('/me',)]
     public function me()
@@ -61,8 +36,11 @@ class LegoController extends AbstractController
     #[Route('/',)]
     public function home(DatabaseInterface $databaseInterface) : Response
     {
-        $this->legos = $databaseInterface->getAllLegos();
-        return $this->render('lego.html.twig', ['legos' => $this->legos]);
+     
+        return $this->render('lego.html.twig', [
+            'legos' => $databaseInterface->getAllLegos(), 
+            'collections'=> $databaseInterface->getAllCollections()
+        ]);
     }
 
 
@@ -90,17 +68,15 @@ class LegoController extends AbstractController
     //     return $this->render('lego.html.twig', ['legos' => array_filter($this->legos, function($lego) { return $lego->getCollection() === "Creator Expert" ; }) ]);
     //    }
 
-    #[Route('/{collection}', name: 'filter_by_collection', requirements: ['collection' => '(creator|star_wars|creator_expert)'])]
-    public function filter($collection): Response
+    #[Route('/{collection}', name: 'filter_by_collection', requirements: ['collection' => '(creator|star_wars|harry_potter|creator_expert)'])]
+    public function filter(DatabaseInterface $databaseInterface, $collection): Response
     {
 
+        $collectionMAJ = str_replace('_',' ', strtolower($collection));
+
         
-        return $this->render('lego.html.twig', [
-            'legos' => array_filter($this->legos, function ($legoData) use ($collection) {
-                
-                return strtolower($legoData->getCollection()) == str_replace('_', ' ', strtolower($collection));
-            })
-        ]);
+        return $this->render('lego.html.twig', ['legos' => $databaseInterface->getLegosByCollection($collectionMAJ), 
+        'collections'=> $databaseInterface->getAllCollections()]);
     }
 
     #[Route('/credits', 'credits')]
