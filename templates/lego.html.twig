@@ -7,10 +7,14 @@
 
 <nav>
   <a href="/">All</a> |
-        
+  <a href="/creator">Creator</a> |
+  <a href="/creator_expert">Creator Expert</a> |
+  <a href="/star_wars">Star Wars</a> |
+  
+{#         
 {% for collection in collections %}
   <a href="/{{collection.link}}">{{collection.name}}</a> |
-{% endfor %}
+{% endfor %} #}
 </nav>
 
 {% for lego in legos %}
@@ -19,7 +23,7 @@
         <div class="lego_header">
           <img class="locandina" src="/images/{{lego.boxImage}}"/>
           <h1>{{lego.name}}</h1>
-          <h4>Collection : {{lego.collection}}</h4>
+          <h4>Collection : {{lego.legocollection.name}}</h4>
           <span class="pieces">Pièces : {{lego.pieces}}</span>
           <p class="price">{{lego.price}}€</p><br>
           <a href="index.php?buy={{lego.id}}"><button>Buy</button></a>

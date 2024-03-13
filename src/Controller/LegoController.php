@@ -14,8 +14,12 @@ use Symfony\Component\HttpFoundation\Response;
 use stdClass;
 use App\Entity\Lego;
 use App\Entity\Collection;
+use App\Entity\LegoCollection;
+use App\Repository\LegoRepository;
+use App\Repository\LegoCollectionRepository;
 use App\Service\CreditsGenerator;
 use App\Service\DatabaseInterface;
+use Doctrine\ORM\EntityManagerInterface;
 
 
 /* le nom de la classe doit être cohérent avec le nom du fichier */
@@ -32,14 +36,33 @@ class LegoController extends AbstractController
         die("Mathis");
     }
 
+    // #[Route('/test')]
+    // public function test(EntityManagerInterface $entityManager): Response
+    // {
+    //     $l = new Lego(1234);
+    //     $l->setName("un beau Lego");
+    //     $l->setDescription("nino lpb");
+    //     $l->setPrice("100");
+    //     $l->setPieces("13855");
+    //     $l->setBoxImage("rhfbrifbrbfi");
+    //     $l->setLegoImage("bdeuofbuoefuo");
+        
+    //     $entityManager->persist($l);
+
+    //     // actually executes the queries (i.e. the INSERT query)
+    //     $entityManager->flush();
+
+    //     return new Response('Saved new product with id '.$l->getId());
+    // }
+
+
 
     #[Route('/',)]
-    public function home(DatabaseInterface $databaseInterface) : Response
+    public function home(LegoRepository $legoRepository) : Response
     {
      
         return $this->render('lego.html.twig', [
-            'legos' => $databaseInterface->getAllLegos(), 
-            'collections'=> $databaseInterface->getAllCollections()
+            'legos' => $legoRepository->findAll()
         ]);
     }
 
@@ -68,16 +91,24 @@ class LegoController extends AbstractController
     //     return $this->render('lego.html.twig', ['legos' => array_filter($this->legos, function($lego) { return $lego->getCollection() === "Creator Expert" ; }) ]);
     //    }
 
-    #[Route('/{collection}', name: 'filter_by_collection', requirements: ['collection' => '(creator|star_wars|harry_potter|creator_expert)'])]
-    public function filter(DatabaseInterface $databaseInterface, $collection): Response
+    #[Route('/{name}', name: 'filter_by_collection', requirements: ['name' => '(creator|star_wars|harry_potter|creator_expert)'])]
+    public function filter(LegoCollection $collection,LegoCollectionRepository $legoCollectionRepository ): Response
     {
 
-        $collectionMAJ = str_replace('_',' ', strtolower($collection));
-
-        
-        return $this->render('lego.html.twig', ['legos' => $databaseInterface->getLegosByCollection($collectionMAJ), 
-        'collections'=> $databaseInterface->getAllCollections()]);
+        return $this->render('lego.html.twig', ['legos' => $collection->getLegos(), 
+        'collections'=> $legoCollectionRepository->findAll()]);
     }
+
+    #[Route('/test/{id}', 'test')]
+    public function test(LegoCollection $collection): Response
+    {
+        dd($collection);
+    }
+
+
+
+
+    
 
     #[Route('/credits', 'credits')]
     public function credits(CreditsGenerator $credits): Response
